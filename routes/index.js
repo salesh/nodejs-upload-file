@@ -63,24 +63,75 @@ router.post('/uploadBigFile', uploadMemory.single('myFile'), (req, res, next) =>
       // TODO: Check whats wrong with this API call;
       const xsrfToken = response.headers['xsrf-token'];
       const authToken = response.headers['set-cookie'];
+      const formData = {
+        "properties": '[{"name":"DocumentId","value":"199"}, {"name":"DocumentName","value":"Front-end Developer Handbook 2019.pdf"}]',
+        "parts": req.file.buffer,
+        "name": `${objectName}`
+      }
       request.post({
         url: `http://${uploadIP}:${uploadPORT}/${uploadApiStore}/${objectName}`,
         headers: {
-          "Content-Type": "multipart/form-data",
           "X-XSRF-TOKEN": xsrfToken,
           "Cookie": authToken
         },
-        formData: {
-          "properties": '',
-          "parts": req.file.buffer,
-          "name": `${objectName}`
-        }
+        formData: formData
       }, (err, response, body) => {
         if (err) {
           console.log(err);
         } else {
           console.log(response);
         }
+      });
+    }
+  });
+});
+
+router.post('/testRoute', uploadDisk.single('myFile'), (req, res, next) => {
+  console.log(req.file.path);
+
+  request.post({
+    url: `http://${uploadIP}:${uploadPORT}/${uploadApiLogin}`,
+    headers: {
+      "Content-Type": "application/json"
+    },
+    json: {
+      "name": `${uploadName}`,
+      "password": `${uploadPassword}`,
+      "server": `${uploadServer}`,
+      "mode": `${mode}`
+    }
+  }, (err, response, body) => {
+    if (err) {
+      console.log(err);
+    } else {
+      // TODO: Check whats wrong with this API call;
+      const readStream = fs.createReadStream(req.file.path);
+      readStream.on('data', function(chunk){ })
+ 
+      // readable event
+      readStream.on('readable', function () {
+          console.log('ready to read');
+          this.read();
+      });      
+
+      const xsrfToken = response.headers['xsrf-token'];
+      const authToken = response.headers['set-cookie'];
+      const reqOptions =  {
+        method: 'POST',
+        url: `http://${uploadIP}:${uploadPORT}/${uploadApiStore}/${objectName}`,
+        formData: {
+          properties: '',
+          parts: readStream,
+          name: `${objectName}`
+        },
+        headers: {
+          "Content-Type": "multipart/form-data",
+          "X-XSRF-TOKEN": xsrfToken,
+          "Cookie": authToken
+        },
+      };
+      request(reqOptions, (err, response, body) => {
+        console.log(response.body);
       });
     }
   });
