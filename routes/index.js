@@ -61,27 +61,34 @@ router.post('/uploadBigFile', uploadMemory.single('myFile'), (req, res, next) =>
       console.log(err);
     } else {
       // TODO: Check whats wrong with this API call;
-      const xsrfToken = response.headers['xsrf-token'];
-      const authToken = response.headers['set-cookie'];
-      const formData = {
-        "properties": '[{"name":"DocumentId","value":"199"}, {"name":"DocumentName","value":"Front-end Developer Handbook 2019.pdf"}]',
-        "parts": req.file.buffer,
-        "name": `${objectName}`
+      const authCodeParam = response.headers['xsrf-token'];
+      const cookiesParam = response.headers['set-cookie'];
+      const arrayPropertiesFile = [
+        { name: 'DocumentId', value: guid() },
+        { name: 'DocName', value: req.file.originalname }
+      ];
+      const fileData = {
+        properties: JSON.stringify(arrayPropertiesFile),
+        name: objectName,
+        parts: req.file.buffer,
       }
-      request.post({
-        url: `http://${uploadIP}:${uploadPORT}/${uploadApiStore}/${objectName}`,
-        headers: {
-          "X-XSRF-TOKEN": xsrfToken,
-          "Cookie": authToken
-        },
-        formData: formData
-      }, (err, response, body) => {
-        if (err) {
-          console.log(err);
-        } else {
-          console.log(response);
-        }
+      return new Promise(function (resolve, reject) {
+        request.post({
+          url: `http://${uploadIP}:${uploadPORT}/${uploadApiStore}/${objectName}`,
+          headers: {
+            "X-XSRF-TOKEN": authCodeParam,
+            "Cookie": cookiesParam
+          },
+          formData: fileData
+        }, (err, response, body) => {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log(response);
+          }
+        });
       });
+
     }
   });
 });
@@ -149,5 +156,9 @@ router.delete('/deleteFile', (req, res, next) => {
     //file removed
   })
 });
+
+function guid () {
+  return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+}
 
 module.exports = router;
