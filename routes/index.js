@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const request = require('request');
+const Joi = require('@hapi/joi');
+
 const { 
   uploadName, 
   uploadIP, 
@@ -160,5 +162,23 @@ router.delete('/deleteFile', (req, res, next) => {
 function guid () {
   return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
 }
+
+
+router.post('/testing-joi', async (req, res, next) => {
+  const arrayOfDepartments = req.body.departments;
+  const rules = Joi.array().items(
+    Joi.object({
+      id: Joi.number().required().messages({
+        'any.required': `Department id is a required field`
+      }),
+      name: Joi.string().required().messages({
+        'any.required': `Department name is a required field`
+      })
+    })
+  );
+  const { error } = rules.validate(arrayOfDepartments);
+  console.log(error);
+  res.send(error);
+});
 
 module.exports = router;
