@@ -4,6 +4,8 @@ const multer = require('multer');
 const request = require('request');
 const Joi = require('@hapi/joi');
 
+const BulkTestingController = require('../controllers/BulkTesting');
+
 const { 
   uploadName, 
   uploadIP, 
@@ -168,17 +170,17 @@ router.post('/testing-joi', async (req, res, next) => {
   const arrayOfDepartments = req.body.departments;
   const rules = Joi.array().items(
     Joi.object({
-      id: Joi.number().required().messages({
-        'any.required': `Department id is a required field`
-      }),
-      name: Joi.string().required().messages({
-        'any.required': `Department name is a required field`
-      })
+      id: Joi.number().required(),
+      name: Joi.string().required().messages()
     })
   );
-  const { error } = rules.validate(arrayOfDepartments);
-  console.log(error);
+  console.log(rules.validate(req.body.departments));
+  const { error } = rules.validate(req.body.departments);
   res.send(error);
 });
+
+router.post('/bulk-update', BulkTestingController.bulkUpdate);
+router.post('/bulk-insert', BulkTestingController.bulkInsert);
+router.post('/insert', BulkTestingController.insert);
 
 module.exports = router;
